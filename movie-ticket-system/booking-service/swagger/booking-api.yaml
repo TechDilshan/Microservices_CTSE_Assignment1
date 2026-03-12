@@ -1,0 +1,79 @@
+openapi: 3.0.0
+info:
+  title: Booking Service API
+  version: 1.0.0
+  description: Booking management service
+
+servers:
+  - url: http://localhost:3003
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+
+  /api/bookings:
+
+    post:
+      summary: Create booking
+      security:
+        - bearerAuth: []
+      responses:
+        201:
+          description: Booking created
+
+    get:
+      summary: Get all bookings
+      responses:
+        200:
+          description: Booking list
+
+
+  /api/bookings/user:
+
+    get:
+      summary: Get user bookings
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: User bookings
+
+
+  /api/bookings/{id}:
+
+    get:
+      summary: Get booking
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+    put:
+      summary: Update booking
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+    delete:
+      summary: Delete booking
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
