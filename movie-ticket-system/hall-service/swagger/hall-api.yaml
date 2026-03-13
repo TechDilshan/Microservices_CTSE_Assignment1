@@ -1,0 +1,25 @@
+openapi: 3.0.0
+info:
+  title: Hall Service API
+  version: 1.0.0
+paths:
+  /api/halls:
+    get:
+      summary: Get halls
+    post:
+      summary: Create hall (Admin)
+  /api/halls/{id}:
+    get:
+      summary: Get hall by ID
+    put:
+      summary: Update hall (Admin/Hall Owner)
+    delete:
+      summary: Delete hall (Admin/Hall Owner)
+  /api/halls/{hallId}/seat-block:
+    get:
+      summary: Get seat block and layout
+    put:
+      summary: Create/Update seat block (Hall Owner)
+  /api/halls/{hallId}/seat-layout:
+    get:
+      summary: Get seat layout

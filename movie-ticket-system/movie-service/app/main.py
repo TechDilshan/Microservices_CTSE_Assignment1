@@ -1,11 +1,10 @@
 from fastapi import FastAPI
-from app.routers import movie_routes, show_routes
+from app.routers import movie_routes
 
 app = FastAPI(
     title="Movie Service",
-    description="Movie and Show management microservice",
-    version="1.0"
+    description="Movie management microservice - Halls with movies, showtimes, prices",
+    version="2.0"
 )
 
 app.include_router(movie_routes.router, prefix="/api")
-app.include_router(show_routes.router, prefix="/api")

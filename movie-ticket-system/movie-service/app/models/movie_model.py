@@ -1,10 +1,6 @@
 def movie_entity(movie) -> dict:
-
-    return {
-        "id": str(movie["_id"]),
-        "title": movie["title"],
-        "genre": movie["genre"],
-        "duration": movie["duration"],
-        "language": movie["language"],
-        "release_date": movie["release_date"]
-    }
+    doc = dict(movie)
+    doc["_id"] = str(doc["_id"])
+    if "hallId" in doc:
+        doc["hallId"] = str(doc["hallId"]) if hasattr(doc["hallId"], "__str__") else doc["hallId"]
+    return doc

@@ -6,6 +6,7 @@ const morgan = require("morgan")
 dotenv.config()
 
 const userProxy = require("./routes/user.proxy")
+const hallProxy = require("./routes/hall.proxy")
 const movieProxy = require("./routes/movie.proxy")
 const bookingProxy = require("./routes/booking.proxy")
 const paymentProxy = require("./routes/payment.proxy")
@@ -29,6 +30,7 @@ services.forEach(service => {
 })
 
 app.use(userProxy)
+app.use(hallProxy)
 app.use(movieProxy)
 app.use(bookingProxy)
 app.use(paymentProxy)
