@@ -20,6 +20,7 @@ app.use(express.json())
 const swaggerDocument = YAML.load("./swagger/booking-api.yaml")
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+app.get("/docs.json", (req, res) => res.json(swaggerDocument))
 
 app.use("/api/bookings", bookingRoutes)
 

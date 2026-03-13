@@ -7,7 +7,5 @@ app = FastAPI(
     version="1.0"
 )
 
-app = FastAPI()
-
 app.include_router(movie_routes.router, prefix="/api")
 app.include_router(show_routes.router, prefix="/api")

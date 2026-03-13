@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtUtil {
 
-    private final String SECRET = "supersecretkey";
+    private final String SECRET = "supersecretkey_movie_ticket_system";
 
     public Claims validateToken(String token) {
 

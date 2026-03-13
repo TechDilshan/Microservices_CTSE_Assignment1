@@ -22,6 +22,7 @@ const swaggerDocument = YAML.load("./swagger/user-api.yaml")
 
 // Swagger endpoint
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+app.get("/docs.json", (req, res) => res.json(swaggerDocument))
 
 // API routes
 app.use("/api/users", userRoutes)
