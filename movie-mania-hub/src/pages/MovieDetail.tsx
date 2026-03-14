@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { moviesApi, hallsApi, bookingsApi } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,7 +19,10 @@ const MovieDetail = () => {
   const { toast } = useToast();
 
   const [movie, setMovie] = useState<any>(null);
-  const [hall, setHall] = useState<any>(null);
+  const [variants, setVariants] = useState<any[]>([]);
+  const [halls, setHalls] = useState<any[]>([]);
+  const [hallSearch, setHallSearch] = useState('');
+  const [selectedHallId, setSelectedHallId] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [seatLayout, setSeatLayout] = useState<any>(null);
@@ -28,23 +31,70 @@ const MovieDetail = () => {
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
 
+  const dateInputRef = useRef<HTMLInputElement | null>(null);
+
   useEffect(() => {
     if (!id) return;
-    moviesApi.getById(id).then(async (res) => {
-      setMovie(res.data);
-      if (res.data.hallId) {
-        const hallRes = await hallsApi.getById(res.data.hallId);
-        setHall(hallRes.data);
-      }
-    }).catch(() => toast({ title: 'Failed to load movie', variant: 'destructive' }))
+    moviesApi
+      .getById(id)
+      .then(async (res) => {
+        const base = res.data;
+        setMovie(base);
+
+        // load all variants of this film (same name in different halls)
+        let allMovies: any[] = [];
+        try {
+          const allRes = await moviesApi.getAll();
+          allMovies = allRes.data || [];
+        } catch {
+          allMovies = [];
+        }
+        const sameName = allMovies.filter(m => m.name === base.name);
+        setVariants(sameName.length ? sameName : [base]);
+
+        const hallIds = Array.from(
+          new Set(
+            (sameName.length ? sameName : [base])
+              .map((m: any) => m.hallId)
+              .filter(Boolean)
+          )
+        );
+
+        const hallDocs: any[] = [];
+        for (const hid of hallIds) {
+          try {
+            const hr = await hallsApi.getById(hid as string);
+            hallDocs.push(hr.data);
+          } catch {
+            // ignore individual hall errors
+          }
+        }
+        setHalls(hallDocs);
+        if (base.hallId) {
+          setSelectedHallId(base.hallId);
+        } else if (hallIds[0]) {
+          setSelectedHallId(hallIds[0] as string);
+        }
+      })
+      .catch(() => toast({ title: 'Failed to load movie', variant: 'destructive' }))
       .finally(() => setLoading(false));
   }, [id]);
 
+  const selectedHall = useMemo(
+    () => halls.find(h => h._id === selectedHallId),
+    [halls, selectedHallId]
+  );
+
+  const selectedVariant = useMemo(
+    () => variants.find(v => v.hallId === selectedHallId) || movie,
+    [variants, selectedHallId, movie]
+  );
+
   useEffect(() => {
-    if (!movie || !selectedDate || !selectedTime) return;
+    if (!selectedVariant || !selectedDate || !selectedTime) return;
     bookingsApi.getAvailableSeats({
-      hallId: movie.hallId,
-      movieId: movie._id,
+      hallId: selectedVariant.hallId,
+      movieId: selectedVariant._id,
       date: selectedDate,
       showTime: selectedTime,
     }).then(res => {
@@ -77,8 +127,8 @@ const MovieDetail = () => {
     setBooking(true);
     try {
       const res = await bookingsApi.create({
-        hallId: movie.hallId,
-        movieId: movie._id,
+        hallId: selectedVariant.hallId,
+        movieId: selectedVariant._id,
         showTime: selectedTime,
         date: selectedDate,
         seats: selectedSeats,
@@ -115,13 +165,13 @@ const MovieDetail = () => {
                   <Badge variant="outline"><Globe className="w-3 h-3 mr-1" />{movie.language}</Badge>
                   <Badge variant="outline"><Clock className="w-3 h-3 mr-1" />{movie.duration} min</Badge>
                 </div>
-                {hall && (
+                {selectedHall && (
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <MapPin className="w-4 h-4" /> {hall.name} - {hall.location}
+                    <MapPin className="w-4 h-4" /> {selectedHall.name} - {selectedHall.location}
                   </div>
                 )}
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" /> {format(new Date(movie.startDate), 'MMM dd')} - {format(new Date(movie.endDate), 'MMM dd, yyyy')}
+                  <Calendar className="w-4 h-4 text-white" /> {format(new Date(movie.startDate), 'MMM dd')} - {format(new Date(movie.endDate), 'MMM dd, yyyy')}
                 </div>
                 {movie.price && (
                   <div className="space-y-1 pt-2 border-t border-border">
@@ -136,20 +186,82 @@ const MovieDetail = () => {
             </div>
           </div>
 
-          {/* Booking */}
+          {/* Halls & Booking */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Hall selection */}
+            {halls.length > 0 && (
+              <div className="glass-card p-6 space-y-4">
+                <h2 className="font-display text-2xl tracking-wider">
+                  SELECT <span className="text-primary">HALL</span>
+                </h2>
+                <div className="grid sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <Label>Search by location</Label>
+                    <Input
+                      placeholder="Type location to filter halls..."
+                      value={hallSearch}
+                      onChange={e => setHallSearch(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {halls
+                    .filter(h =>
+                      !hallSearch ||
+                      (h.location || '').toLowerCase().includes(hallSearch.toLowerCase())
+                    )
+                    .map(h => (
+                      <button
+                        key={h._id}
+                        type="button"
+                        onClick={() => setSelectedHallId(h._id)}
+                        className={`text-left p-3 rounded border transition-colors ${
+                          selectedHallId === h._id
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:border-primary/40'
+                        }`}
+                      >
+                        <div className="font-medium">{h.name}</div>
+                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                          <MapPin className="w-3 h-3" /> {h.location}
+                        </div>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
+
             <div className="glass-card p-6 space-y-4">
               <h2 className="font-display text-2xl tracking-wider">BOOK <span className="text-primary">TICKETS</span></h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Select Date</Label>
-                  <Input
-                    type="date"
-                    value={selectedDate}
-                    onChange={e => setSelectedDate(e.target.value)}
-                    min={movie.startDate?.split('T')[0]}
-                    max={movie.endDate?.split('T')[0]}
-                  />
+                  <div className="relative">
+                    <Input
+                      ref={dateInputRef}
+                      type="date"
+                      value={selectedDate}
+                      onChange={e => setSelectedDate(e.target.value)}
+                      min={movie.startDate?.split('T')[0]}
+                      max={movie.endDate?.split('T')[0]}
+                      className="pr-10"
+                    />
+                    <Calendar
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white cursor-pointer"
+                      onClick={() => {
+                        const el = dateInputRef.current;
+                        if (!el) return;
+                        // try native picker if supported
+                        // @ts-ignore
+                        if (typeof el.showPicker === 'function') {
+                          // @ts-ignore
+                          el.showPicker();
+                        } else {
+                          el.focus();
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label>Select Show Time</Label>

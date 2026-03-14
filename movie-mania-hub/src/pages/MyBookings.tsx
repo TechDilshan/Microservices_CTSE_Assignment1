@@ -42,7 +42,7 @@ const MyBookings = () => {
                     <Badge className={getStatusColor(b.paymentStatus)}>Payment: {b.paymentStatus}</Badge>
                   </div>
                   <div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
-                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{b.date ? format(new Date(b.date), 'MMM dd, yyyy') : 'N/A'}</span>
+                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-white" />{b.date ? format(new Date(b.date), 'MMM dd, yyyy') : 'N/A'}</span>
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{b.showTime}</span>
                     <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{b.hallId}</span>
                   </div>

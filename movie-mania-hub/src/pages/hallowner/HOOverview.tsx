@@ -6,12 +6,31 @@ const HOOverview = () => {
   const [stats, setStats] = useState({ movies: 0, bookings: 0, halls: 0, payments: 0 });
 
   useEffect(() => {
-    Promise.all([
-      moviesApi.getAll().then(r => r.data.length).catch(() => 0),
-      bookingsApi.getAll().then(r => r.data.length).catch(() => 0),
-      hallsApi.getAll().then(r => r.data.length).catch(() => 0),
-      bookingsApi.getPayments().then(r => r.data.length).catch(() => 0),
-    ]).then(([movies, bookings, halls, payments]) => setStats({ movies, bookings, halls, payments }));
+    const load = async () => {
+      try {
+        const hallsRes = await hallsApi.getAll();
+        const halls = hallsRes.data || [];
+        const hallIds = new Set(halls.map((h: any) => h._id).filter(Boolean));
+
+        let myMovies = 0;
+        try {
+          const moviesRes = await moviesApi.getAll();
+          const allMovies = moviesRes.data || [];
+          myMovies = allMovies.filter((m: any) => m.hallId && hallIds.has(m.hallId)).length;
+        } catch {
+          myMovies = 0;
+        }
+
+        const bookings = await bookingsApi.getAll().then(r => (r.data || []).length).catch(() => 0);
+        const payments = await bookingsApi.getPayments().then(r => (r.data || []).length).catch(() => 0);
+
+        setStats({ movies: myMovies, bookings, halls: halls.length, payments });
+      } catch {
+        setStats({ movies: 0, bookings: 0, halls: 0, payments: 0 });
+      }
+    };
+
+    load();
   }, []);
 
   const cards = [

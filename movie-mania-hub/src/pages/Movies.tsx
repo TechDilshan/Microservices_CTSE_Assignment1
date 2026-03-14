@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { moviesApi } from '@/lib/api';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 
 interface Movie {
   _id: string;
+  hallId?: string;
   name: string;
   genre: string;
   language: string;
@@ -25,14 +26,36 @@ const Movies = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    moviesApi.getAll().then(res => setMovies(res.data)).catch(() => {}).finally(() => setLoading(false));
+    moviesApi
+      .getAll()
+      .then(res => setMovies(res.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  const filtered = movies.filter(m =>
-    m.name.toLowerCase().includes(search.toLowerCase()) ||
-    m.genre.toLowerCase().includes(search.toLowerCase()) ||
-    m.language.toLowerCase().includes(search.toLowerCase())
-  );
+  // group by movie name so the same film across multiple halls shows only once
+  const uniqueMovies = useMemo(() => {
+    const map = new Map<string, Movie>();
+    for (const m of movies) {
+      if (!m?.name) continue;
+      if (!map.has(m.name)) {
+        map.set(m.name, m);
+      }
+    }
+    return Array.from(map.values());
+  }, [movies]);
+
+  const filtered = uniqueMovies.filter(m => {
+    const q = search.toLowerCase();
+    const name = (m.name || '').toLowerCase();
+    const genre = (m.genre || '').toLowerCase();
+    const language = (m.language || '').toLowerCase();
+    return (
+      name.includes(q) ||
+      genre.includes(q) ||
+      language.includes(q)
+    );
+  });
 
   return (
     <div className="min-h-screen pt-16">
