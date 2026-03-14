@@ -68,6 +68,27 @@ export const moviesApi = {
   delete: (id: string) => api.delete(`/api/movies/${id}`),
 };
 
+// Reviews & Ratings
+export const reviewsApi = {
+  getForMovie: (movieId: string) => api.get(`/api/reviews/movie/${movieId}`),
+  getSummaryForMovie: (movieId: string) => api.get(`/api/reviews/movie/${movieId}/summary`),
+  create: (data: { movieId: string; rating: number; comment?: string }) => api.post('/api/reviews', data),
+  update: (id: string, data: { rating?: number; comment?: string }) => api.put(`/api/reviews/${id}`, data),
+  delete: (id: string) => api.delete(`/api/reviews/${id}`),
+};
+
+// Discounts
+export const discountsApi = {
+  create: (data: any) => api.post('/api/discounts', data),
+  update: (id: string, data: any) => api.put(`/api/discounts/${id}`, data),
+  delete: (id: string) => api.delete(`/api/discounts/${id}`),
+  getMine: () => api.get('/api/discounts/mine'),
+  getApplicable: (params: { hallId: string; movieId?: string; date?: string; seats?: number }) =>
+    api.get('/api/discounts/applicable', { params }),
+  calculate: (data: { hallId: string; movieId?: string; date: string; seats: string[]; baseAmount: number }) =>
+    api.post('/api/discounts/calculate', data),
+};
+
 // Bookings
 export const bookingsApi = {
   create: (data: { hallId: string; movieId: string; showTime: string; date: string; seats: string[] }) => api.post('/api/bookings', data),
@@ -90,6 +111,13 @@ export const paymentsApi = {
   getByBooking: (bookingId: string) => api.get(`/api/payments/booking/${bookingId}`),
   updateStatus: (id: string, status: string) => api.put(`/api/payments/${id}/status?status=${status}`),
   delete: (id: string) => api.delete(`/api/payments/${id}`),
+};
+
+// Analytics
+export const analyticsApi = {
+  getMovieRankings: () => api.get('/api/analytics/movies/rankings'),
+  getHallOwnerOverview: () => api.get('/api/analytics/hall-owner/overview'),
+  getAdminOverview: () => api.get('/api/analytics/admin/overview'),
 };
 
 export default api;

@@ -1,0 +1,68 @@
+name: CI - Build and Verify Microservices
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  node-services:
+    name: Build Node.js services
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [ "api-gateway", "user-service", "hall-service", "booking-service", "review-service", "discount-service", "analytics-service" ]
+    defaults:
+      run:
+        working-directory: movie-ticket-system/${{ matrix.service }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+  python-movie-service:
+    name: Build Python movie-service
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: movie-ticket-system/movie-service
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+  java-payment-service:
+    name: Build Java payment-service
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: movie-ticket-system/payment-service
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Build with Maven
+        run: mvn -B -DskipTests package

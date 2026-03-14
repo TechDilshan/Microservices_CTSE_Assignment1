@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Movies from "./pages/Movies";
 import MovieDetail from "./pages/MovieDetail";
+import MoviesAnalytics from "./pages/MoviesAnalytics";
 import Payment from "./pages/Payment";
 import Profile from "./pages/Profile";
 import MyBookings from "./pages/MyBookings";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/movies" element={<Movies />} />
             <Route path="/movies/:id" element={<MovieDetail />} />
+            <Route path="/analytics/movies" element={<MoviesAnalytics />} />
             <Route path="/payment/:bookingId" element={<ProtectedRoute roles={['customer']}><Payment /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/my-bookings" element={<ProtectedRoute roles={['customer']}><MyBookings /></ProtectedRoute>} />

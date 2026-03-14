@@ -1,17 +1,21 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Film, Building2, Users, Ticket, CreditCard, LayoutDashboard, Armchair } from 'lucide-react';
+import { Film, Users, Ticket, CreditCard, LayoutDashboard, Armchair, Percent, BarChart3 } from 'lucide-react';
 import HOOverview from './HOOverview';
 import HOMovies from './HOMovies';
 import HOBookings from './HOBookings';
 import HOPayments from './HOPayments';
 import HOCustomers from './HOCustomers';
 import HOSeatBlock from './HOSeatBlock';
+import HODiscounts from './HODiscounts';
+import HOAnalytics from './HOAnalytics';
 
 const navItems = [
   { label: 'Overview', href: '/hall-owner', icon: <LayoutDashboard className="w-4 h-4" /> },
   { label: 'Movies', href: '/hall-owner/movies', icon: <Film className="w-4 h-4" /> },
   { label: 'Seat Blocks', href: '/hall-owner/seat-blocks', icon: <Armchair className="w-4 h-4" /> },
+  { label: 'Discounts', href: '/hall-owner/discounts', icon: <Percent className="w-4 h-4" /> },
+  { label: 'Analytics', href: '/hall-owner/analytics', icon: <BarChart3 className="w-4 h-4" /> },
   { label: 'Bookings', href: '/hall-owner/bookings', icon: <Ticket className="w-4 h-4" /> },
   { label: 'Payments', href: '/hall-owner/payments', icon: <CreditCard className="w-4 h-4" /> },
   { label: 'Customers', href: '/hall-owner/customers', icon: <Users className="w-4 h-4" /> },
@@ -23,6 +27,8 @@ const HallOwnerDashboard = () => (
       <Route index element={<HOOverview />} />
       <Route path="movies" element={<HOMovies />} />
       <Route path="seat-blocks" element={<HOSeatBlock />} />
+      <Route path="discounts" element={<HODiscounts />} />
+      <Route path="analytics" element={<HOAnalytics />} />
       <Route path="bookings" element={<HOBookings />} />
       <Route path="payments" element={<HOPayments />} />
       <Route path="customers" element={<HOCustomers />} />

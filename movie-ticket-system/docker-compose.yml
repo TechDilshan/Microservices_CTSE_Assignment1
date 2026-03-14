@@ -1,0 +1,225 @@
+version: "3.9"
+
+services:
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - USER_SERVICE=http://user-service:3001
+      - HALL_SERVICE=http://hall-service:3005
+      - MOVIE_SERVICE=http://movie-service:8000
+      - BOOKING_SERVICE=http://booking-service:3003
+      - PAYMENT_SERVICE=http://payment-service:3004
+      - REVIEW_SERVICE=http://review-service:3010
+      - DISCOUNT_SERVICE=http://discount-service:3020
+      - ANALYTICS_SERVICE=http://analytics-service:3030
+    depends_on:
+      - user-service
+      - hall-service
+      - movie-service
+      - booking-service
+      - payment-service
+    networks:
+      - movie-net
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - MONGO_URI=mongodb://user-mongo:27017/user_service
+      - JWT_SECRET=supersecretkey_movie_ticket_system
+    depends_on:
+      - user-mongo
+    networks:
+      - movie-net
+
+  hall-service:
+    build: ./hall-service
+    container_name: hall-service
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      - MONGO_URI=mongodb://hall-mongo:27017/hall_service
+      - JWT_SECRET=supersecretkey_movie_ticket_system
+    depends_on:
+      - hall-mongo
+    networks:
+      - movie-net
+
+  movie-service:
+    build: ./movie-service
+    container_name: movie-service
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=mongodb://movie-mongo:27017/moviedb
+      - DB_NAME=moviedb
+      - JWT_SECRET=supersecretkey_movie_ticket_system
+    depends_on:
+      - movie-mongo
+    networks:
+      - movie-net
+
+  booking-service:
+    build: ./booking-service
+    container_name: booking-service
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - MONGO_URI=mongodb://booking-mongo:27017/booking_service
+      - JWT_SECRET=supersecretkey_movie_ticket_system
+      - MOVIE_SERVICE_URL=http://movie-service:8000/api
+      - HALL_SERVICE_URL=http://hall-service:3005
+      - PAYMENT_SERVICE_URL=http://payment-service:3004/api
+    depends_on:
+      - booking-mongo
+      - movie-service
+      - hall-service
+      - payment-service
+    networks:
+      - movie-net
+
+  payment-service:
+    build: ./payment-service
+    container_name: payment-service
+    ports:
+      - "3004:3004"
+    environment:
+      - SERVER_PORT=3004
+      - SPRING_DATA_MONGODB_URI=mongodb://payment-mongo:27017/paymentdb
+    depends_on:
+      - payment-mongo
+    networks:
+      - movie-net
+
+  review-service:
+    build: ./review-service
+    container_name: review-service
+    ports:
+      - "3010:3010"
+    environment:
+      - PORT=3010
+      - MONGO_URI=mongodb://review-mongo:27017/review_service
+      - JWT_SECRET=supersecretkey_movie_ticket_system
+    depends_on:
+      - review-mongo
+    networks:
+      - movie-net
+
+  discount-service:
+    build: ./discount-service
+    container_name: discount-service
+    ports:
+      - "3020:3020"
+    environment:
+      - PORT=3020
+      - MONGO_URI=mongodb://discount-mongo:27017/discount_service
+      - JWT_SECRET=supersecretkey_movie_ticket_system
+    depends_on:
+      - discount-mongo
+    networks:
+      - movie-net
+
+  analytics-service:
+    build: ./analytics-service
+    container_name: analytics-service
+    ports:
+      - "3030:3030"
+    environment:
+      - PORT=3030
+      - JWT_SECRET=supersecretkey_movie_ticket_system
+      - REVIEW_SERVICE_URL=http://review-service:3010/api/reviews/summary/all
+      - MOVIE_SERVICE_URL=http://movie-service:8000/api/movies
+      - HALL_SERVICE_URL=http://hall-service:3005/api/halls
+      - BOOKING_SERVICE_URL=http://booking-service:3003/api/bookings
+    depends_on:
+      - review-service
+      - movie-service
+      - hall-service
+      - booking-service
+    networks:
+      - movie-net
+
+  user-mongo:
+    image: mongo:7
+    container_name: user-mongo
+    restart: unless-stopped
+    volumes:
+      - user-mongo-data:/data/db
+    networks:
+      - movie-net
+
+  hall-mongo:
+    image: mongo:7
+    container_name: hall-mongo
+    restart: unless-stopped
+    volumes:
+      - hall-mongo-data:/data/db
+    networks:
+      - movie-net
+
+  movie-mongo:
+    image: mongo:7
+    container_name: movie-mongo
+    restart: unless-stopped
+    volumes:
+      - movie-mongo-data:/data/db
+    networks:
+      - movie-net
+
+  booking-mongo:
+    image: mongo:7
+    container_name: booking-mongo
+    restart: unless-stopped
+    volumes:
+      - booking-mongo-data:/data/db
+    networks:
+      - movie-net
+
+  payment-mongo:
+    image: mongo:7
+    container_name: payment-mongo
+    restart: unless-stopped
+    volumes:
+      - payment-mongo-data:/data/db
+    networks:
+      - movie-net
+
+  review-mongo:
+    image: mongo:7
+    container_name: review-mongo
+    restart: unless-stopped
+    volumes:
+      - review-mongo-data:/data/db
+    networks:
+      - movie-net
+
+  discount-mongo:
+    image: mongo:7
+    container_name: discount-mongo
+    restart: unless-stopped
+    volumes:
+      - discount-mongo-data:/data/db
+    networks:
+      - movie-net
+
+networks:
+  movie-net:
+    driver: bridge
+
+volumes:
+  user-mongo-data:
+  hall-mongo-data:
+  movie-mongo-data:
+  booking-mongo-data:
+  payment-mongo-data:
+  review-mongo-data:
+  discount-mongo-data:

@@ -33,6 +33,7 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-6">
           <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Home</Link>
           <Link to="/movies" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Movies</Link>
+          <Link to="/analytics/movies" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Analytics</Link>
           {user ? (
             <>
               <Link to={getDashboardLink()} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -68,6 +69,7 @@ const Navbar = () => {
         <div className="md:hidden bg-background border-b border-border px-4 pb-4 space-y-2">
           <Link to="/" className="block py-2 text-muted-foreground" onClick={() => setMenuOpen(false)}>Home</Link>
           <Link to="/movies" className="block py-2 text-muted-foreground" onClick={() => setMenuOpen(false)}>Movies</Link>
+          <Link to="/analytics/movies" className="block py-2 text-muted-foreground" onClick={() => setMenuOpen(false)}>Analytics</Link>
           {user ? (
             <>
               <Link to={getDashboardLink()} className="block py-2 text-muted-foreground" onClick={() => setMenuOpen(false)}>Dashboard</Link>

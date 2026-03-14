@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { moviesApi, hallsApi, bookingsApi } from '@/lib/api';
+import { moviesApi, hallsApi, bookingsApi, reviewsApi, discountsApi } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +30,18 @@ const MovieDetail = () => {
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
+
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewSummary, setReviewSummary] = useState<{ averageRating: number; count: number } | null>(null);
+  const [reviewForm, setReviewForm] = useState({ rating: 0, comment: '' });
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+
+  const [discountInfo, setDiscountInfo] = useState<{
+    baseAmount: number;
+    discountAmount: number;
+    finalAmount: number;
+    discountPercentage: number;
+  } | null>(null);
 
   const dateInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -110,6 +122,80 @@ const MovieDetail = () => {
     );
   };
 
+  const loadReviews = async (movieId: string) => {
+    try {
+      const [listRes, summaryRes] = await Promise.all([
+        reviewsApi.getForMovie(movieId),
+        reviewsApi.getSummaryForMovie(movieId),
+      ]);
+      setReviews(listRes.data || []);
+      setReviewSummary(summaryRes.data || { averageRating: 0, count: 0 });
+    } catch {
+      setReviews([]);
+      setReviewSummary(null);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      loadReviews(id);
+    }
+  }, [id]);
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (!id || !reviewForm.rating) {
+      toast({ title: 'Please provide a rating', variant: 'destructive' });
+      return;
+    }
+    try {
+      if (editingReviewId) {
+        await reviewsApi.update(editingReviewId, {
+          rating: reviewForm.rating,
+          comment: reviewForm.comment,
+        });
+        toast({ title: 'Review updated' });
+      } else {
+        await reviewsApi.create({
+          movieId: id,
+          rating: reviewForm.rating,
+          comment: reviewForm.comment,
+        });
+        toast({ title: 'Review added' });
+      }
+      setEditingReviewId(null);
+      setReviewForm({ rating: 0, comment: '' });
+      await loadReviews(id);
+    } catch (err: any) {
+      toast({
+        title: 'Failed to save review',
+        description: err.response?.data?.message || 'Try again',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleEditReview = (review: any) => {
+    setEditingReviewId(review._id);
+    setReviewForm({ rating: review.rating, comment: review.comment || '' });
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!id) return;
+    if (!confirm('Delete this review?')) return;
+    try {
+      await reviewsApi.delete(reviewId);
+      toast({ title: 'Review deleted' });
+      await loadReviews(id);
+    } catch {
+      toast({ title: 'Failed to delete review', variant: 'destructive' });
+    }
+  };
+
   const calculateTotal = () => {
     if (!movie?.price || selectedSeats.length === 0) return 0;
     return selectedSeats.reduce((total, seat) => {
@@ -119,6 +205,40 @@ const MovieDetail = () => {
       return total;
     }, 0);
   };
+
+  // Whenever seats/date change, compute discount (if any)
+  useEffect(() => {
+    const run = async () => {
+      if (!selectedVariant || !selectedDate || selectedSeats.length === 0) {
+        setDiscountInfo(null);
+        return;
+      }
+      const base = calculateTotal();
+      if (!base) {
+        setDiscountInfo(null);
+        return;
+      }
+      try {
+        const res = await discountsApi.calculate({
+          hallId: selectedVariant.hallId,
+          movieId: selectedVariant._id,
+          date: selectedDate,
+          seats: selectedSeats,
+          baseAmount: base,
+        });
+        const d = res.data;
+        setDiscountInfo({
+          baseAmount: d.baseAmount,
+          discountAmount: d.discountAmount,
+          finalAmount: d.finalAmount,
+          discountPercentage: d.discountPercentage,
+        });
+      } catch {
+        setDiscountInfo(null);
+      }
+    };
+    run();
+  }, [selectedVariant, selectedDate, selectedSeats]);
 
   const handleBook = async () => {
     if (!user) { navigate('/login'); return; }
@@ -133,7 +253,8 @@ const MovieDetail = () => {
         date: selectedDate,
         seats: selectedSeats,
       });
-      navigate(`/payment/${res.data._id}`, { state: { amount: calculateTotal(), booking: res.data } });
+      const amount = discountInfo?.finalAmount ?? calculateTotal();
+      navigate(`/payment/${res.data._id}`, { state: { amount, booking: res.data } });
     } catch (err: any) {
       toast({ title: 'Booking failed', description: err.response?.data?.message || 'Try again', variant: 'destructive' });
     } finally {
@@ -165,6 +286,14 @@ const MovieDetail = () => {
                   <Badge variant="outline"><Globe className="w-3 h-3 mr-1" />{movie.language}</Badge>
                   <Badge variant="outline"><Clock className="w-3 h-3 mr-1" />{movie.duration} min</Badge>
                 </div>
+                {reviewSummary && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span className="font-semibold text-primary">
+                      {reviewSummary.averageRating?.toFixed(1) || '0.0'} / 5
+                    </span>
+                    <span>({reviewSummary.count || 0} reviews)</span>
+                  </div>
+                )}
                 {selectedHall && (
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <MapPin className="w-4 h-4" /> {selectedHall.name} - {selectedHall.location}
@@ -296,16 +425,98 @@ const MovieDetail = () => {
                   <div className="flex justify-between"><span className="text-muted-foreground">Seats</span><span>{selectedSeats.join(', ')}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span>{selectedDate}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Time</span><span>{selectedTime}</span></div>
-                  <div className="flex justify-between text-lg font-semibold border-t border-border pt-2">
-                    <span>Total</span>
-                    <span className="text-primary flex items-center"><DollarSign className="w-4 h-4" />Rs. {calculateTotal()}</span>
-                  </div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Base Total</span><span>Rs. {calculateTotal()}</span></div>
+                  {discountInfo && discountInfo.discountAmount > 0 && (
+                    <>
+                      <div className="flex justify-between text-xs text-emerald-400">
+                        <span>Discount ({discountInfo.discountPercentage}% )</span>
+                        <span>- Rs. {discountInfo.discountAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-lg font-semibold border-t border-border pt-2">
+                        <span>Final Total</span>
+                        <span className="text-primary flex items-center"><DollarSign className="w-4 h-4" />Rs. {discountInfo.finalAmount.toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
+                  {!discountInfo && (
+                    <div className="flex justify-between text-lg font-semibold border-t border-border pt-2">
+                      <span>Total</span>
+                      <span className="text-primary flex items-center"><DollarSign className="w-4 h-4" />Rs. {calculateTotal()}</span>
+                    </div>
+                  )}
                 </div>
                 <Button className="w-full" size="lg" onClick={handleBook} disabled={booking}>
                   {booking ? 'Processing...' : 'Proceed to Payment'}
                 </Button>
               </div>
             )}
+
+            {/* Reviews */}
+            <div className="glass-card p-6 space-y-4">
+              <h3 className="font-display text-xl tracking-wider">REVIEWS &amp; <span className="text-primary">RATINGS</span></h3>
+              {user ? (
+                <form onSubmit={handleSubmitReview} className="space-y-3">
+                  <div className="grid sm:grid-cols-4 gap-3 items-center">
+                    <div className="sm:col-span-1">
+                      <Label>Rating</Label>
+                      <select
+                        className="w-full rounded border border-border bg-background px-2 py-1 text-sm"
+                        value={reviewForm.rating}
+                        onChange={e => setReviewForm({ ...reviewForm, rating: Number(e.target.value) })}
+                      >
+                        <option value={0}>Select</option>
+                        {[1, 2, 3, 4, 5].map(r => (
+                          <option key={r} value={r}>{r} Star{r > 1 ? 's' : ''}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="sm:col-span-3">
+                      <Label>Comment</Label>
+                      <Input
+                        placeholder="Share your experience..."
+                        value={reviewForm.comment}
+                        onChange={e => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <Button type="submit" size="sm">
+                    {editingReviewId ? 'Update Review' : 'Submit Review'}
+                  </Button>
+                </form>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Please <button className="underline" onClick={() => navigate('/login')}>login</button> to add a review.
+                </p>
+              )}
+
+              <div className="space-y-3 pt-2">
+                {reviews.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No reviews yet. Be the first to review this movie.</p>
+                )}
+                {reviews.map((rev) => {
+                  const isOwner = user && (user._id === rev.userId || user.email === rev.userEmail);
+                  return (
+                    <div key={rev._id} className="border border-border rounded px-3 py-2 text-sm flex justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{rev.userName || 'Anonymous'}</span>
+                          <span className="text-primary">{'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}</span>
+                        </div>
+                        {rev.comment && (
+                          <p className="text-muted-foreground mt-1">{rev.comment}</p>
+                        )}
+                      </div>
+                      {isOwner && (
+                        <div className="flex flex-col gap-1 items-end">
+                          <Button variant="ghost" size="sm" onClick={() => handleEditReview(rev)}>Edit</Button>
+                          <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteReview(rev._id)}>Delete</Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </div>

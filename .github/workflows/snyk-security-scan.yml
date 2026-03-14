@@ -1,0 +1,59 @@
+name: DevSecOps - Snyk Security Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  snyk-node:
+    name: Snyk scan - Node.js services
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [ "api-gateway", "user-service", "hall-service", "booking-service" ]
+    defaults:
+      run:
+        working-directory: movie-ticket-system/${{ matrix.service }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Snyk
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=medium
+
+  snyk-java:
+    name: Snyk scan - Java payment-service
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: movie-ticket-system/payment-service
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Run Snyk
+        uses: snyk/actions/maven@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=medium

@@ -5,7 +5,10 @@ const services = [
     { name: "Hall Service", url: "http://localhost:3005/docs.json", path: "/api-docs/hall.json" },
     { name: "Movie Service", url: "http://localhost:8000/openapi.json", path: "/api-docs/movie.json" },
     { name: "Booking Service", url: "http://localhost:3003/docs.json", path: "/api-docs/booking.json" },
-    { name: "Payment Service", url: "http://localhost:3004/v3/api-docs", path: "/api-docs/payment.json" }
+    { name: "Payment Service", url: "http://localhost:3004/v3/api-docs", path: "/api-docs/payment.json" },
+    { name: "Review Service", url: "http://localhost:3010/docs.json", path: "/api-docs/review.json" },
+    { name: "Discount Service", url: "http://localhost:3020/docs.json", path: "/api-docs/discount.json" },
+    { name: "Analytics Service", url: "http://localhost:3030/docs.json", path: "/api-docs/analytics.json" }
 ]
 
 const swaggerOptions = {
