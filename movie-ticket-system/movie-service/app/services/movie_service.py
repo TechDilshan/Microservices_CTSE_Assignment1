@@ -40,7 +40,8 @@ def get_all_movies(hall_id: str = None):
     if hall_id:
         filter_query["hallId"] = ObjectId(hall_id)
     movies = []
-    for movie in movies_collection.find(filter_query):
+    # latest created first by ObjectId timestamp
+    for movie in movies_collection.find(filter_query).sort("_id", -1):
         movies.append(_serialize_movie(movie))
     return movies
 
