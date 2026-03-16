@@ -1,11 +1,5 @@
 const jwt = require("jsonwebtoken");
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable is required");
-}
-
 const extractToken = (req) => {
   const authHeader = req.headers["authorization"];
   if (!authHeader) return null;
@@ -15,6 +9,11 @@ const extractToken = (req) => {
 };
 
 const requireHallOwnerOrAdmin = (req, res, next) => {
+  const JWT_SECRET = process.env.JWT_SECRET;
+  if (!JWT_SECRET) {
+    return res.status(500).json({ detail: "JWT_SECRET is not configured" });
+  }
+
   const token = extractToken(req);
   if (!token) {
     return res.status(401).json({ detail: "Invalid token" });
