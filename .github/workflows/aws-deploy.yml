@@ -1,0 +1,68 @@
+name: Deploy to AWS ECR and ECS
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  AWS_REGION: ap-south-1
+  ECS_CLUSTER: "microservices-cluster" # UPDATE THIS: Replace with your actual ECS Cluster name in AWS
+
+jobs:
+  deploy:
+    name: Build, Push, and Deploy
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 3 # To prevent rate limiting or excessive concurrent jobs
+      matrix:
+        service: 
+          - "api-gateway"
+          - "user-service"
+          - "hall-service"
+          - "booking-service"
+          - "review-service"
+          - "discount-service"
+          - "analytics-service"
+          - "movie-service"
+          - "payment-service"
+          
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        # This action automatically runs the `aws ecr get-login-password | docker login` command securely
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          # This registry string will dynamically match 539898341093.dkr.ecr.ap-south-1.amazonaws.com based on your AWS credentials
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ matrix.service }}
+          IMAGE_TAG: latest
+        run: |
+          # 1. Build docker image
+          # Uses the matrix variable to build each service dynamically based on your existing structure
+          docker buildx build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./movie-ticket-system/${{ matrix.service }}
+          
+          # 2. Push docker image
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          
+      - name: Update ECS Service
+        run: |
+          # 3. Automatically update docker container inside AWS ECS
+          # This command forces the ECS service to redeploy pulling the new "latest" image from ECR
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ matrix.service }} \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
