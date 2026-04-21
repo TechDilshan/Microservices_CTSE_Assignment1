@@ -12,6 +12,7 @@ jobs:
     name: Build, Push, and Deploy
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       max-parallel: 3 # To prevent rate limiting or excessive concurrent jobs
       matrix:
         service: 
