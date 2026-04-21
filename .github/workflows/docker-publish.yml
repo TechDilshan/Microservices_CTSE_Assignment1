@@ -1,41 +1,41 @@
-name: CD - Build and Push Docker Images
+# name: CD - Build and Push Docker Images
 
-on:
-  push:
-    branches: [ main ]
+# on:
+#   push:
+#     branches: [ main ]
 
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: 
-          - "api-gateway"
-          - "user-service"
-          - "hall-service"
-          - "booking-service"
-          - "review-service"
-          - "discount-service"
-          - "analytics-service"
-          - "movie-service"
-          - "payment-service"
-    env:
-      REGISTRY: docker.io
-      DOCKERHUB_NAMESPACE: ${{ secrets.DOCKERHUB_NAMESPACE }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+# jobs:
+#   build-and-push:
+#     runs-on: ubuntu-latest
+#     strategy:
+#       matrix:
+#         service: 
+#           - "api-gateway"
+#           - "user-service"
+#           - "hall-service"
+#           - "booking-service"
+#           - "review-service"
+#           - "discount-service"
+#           - "analytics-service"
+#           - "movie-service"
+#           - "payment-service"
+#     env:
+#       REGISTRY: docker.io
+#       DOCKERHUB_NAMESPACE: ${{ secrets.DOCKERHUB_NAMESPACE }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+#       - name: Login to Docker Hub
+#         uses: docker/login-action@v3
+#         with:
+#           registry: ${{ env.REGISTRY }}
+#           username: ${{ secrets.DOCKERHUB_USERNAME }}
+#           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push images
-        uses: docker/build-push-action@v6
-        with:
-          context: ./movie-ticket-system/${{ matrix.service }}
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.DOCKERHUB_NAMESPACE }}/${{ matrix.service }}:latest
+#       - name: Build and push images
+#         uses: docker/build-push-action@v6
+#         with:
+#           context: ./movie-ticket-system/${{ matrix.service }}
+#           push: true
+#           tags: ${{ env.REGISTRY }}/${{ env.DOCKERHUB_NAMESPACE }}/${{ matrix.service }}:latest
