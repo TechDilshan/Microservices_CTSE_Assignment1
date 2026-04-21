@@ -24,7 +24,7 @@ app.use(express.json())
 app.use(morgan("dev"))
 
 app.get("/api/health", (req, res) => {
-    res.json({ status: "OK API Gateway .." });
+    res.json({ status: "OK API Gateway done" });
 });
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(null, swaggerOptions))
