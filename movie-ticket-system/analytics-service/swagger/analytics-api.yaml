@@ -1,0 +1,107 @@
+openapi: 3.0.0
+info:
+  title: Analytics Service API
+  version: 1.0.0
+  description: Analytics and rankings service
+
+servers:
+  - url: http://localhost:3030
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+
+  /api/analytics/movies/rankings:
+
+    get:
+      summary: Get movie rankings
+      description: Returns list of movies sorted by rating and review count
+      responses:
+        200:
+          description: A list of ranked movies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    movieId:
+                      type: string
+                    name:
+                      type: string
+                    genre:
+                      type: string
+                    hallId:
+                      type: string
+                    averageRating:
+                      type: number
+                    reviewCount:
+                      type: integer
+        500:
+          description: Internal Server Error
+
+  /api/analytics/hall-owner/overview:
+
+    get:
+      summary: Get hall owner overview
+      description: Provides analytics overview for hall owners
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Overview metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  halls:
+                    type: integer
+                  movies:
+                    type: integer
+                  bookings:
+                    type: integer
+                  payments:
+                    type: integer
+                  revenue:
+                    type: number
+        403:
+          description: Forbidden
+        500:
+          description: Internal Server Error
+
+  /api/analytics/admin/overview:
+
+    get:
+      summary: Get admin overview
+      description: Provides system-wide analytics overview for admins
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Overview metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  halls:
+                    type: integer
+                  movies:
+                    type: integer
+                  bookings:
+                    type: integer
+                  payments:
+                    type: integer
+                  revenue:
+                    type: number
+        403:
+          description: Forbidden
+        500:
+          description: Internal Server Error

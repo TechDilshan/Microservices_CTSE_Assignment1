@@ -15,6 +15,10 @@ connectDB()
 app.use(cors())
 app.use(express.json())
 
+app.get("/api/health", (req, res) => {
+    res.json({ status: "OK Hall" });
+});
+
 const swaggerDocument = YAML.load("./swagger/hall-api.yaml")
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 app.get("/docs.json", (req, res) => res.json(swaggerDocument))

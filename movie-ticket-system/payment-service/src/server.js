@@ -3,6 +3,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
+const path = require("path");
 
 const connectDB = require("./config/db");
 const paymentRoutes = require("./routes/payment.routes");
@@ -16,7 +17,11 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
-const swaggerDocument = YAML.load("./swagger/payment-api.yaml");
+app.get("/api/health", (req, res) => {
+  res.json({ status: "OK Payment" });
+});
+
+const swaggerDocument = YAML.load(path.join(__dirname, "swagger/payment-api.yaml"));
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.get("/docs.json", (req, res) => res.json(swaggerDocument));
 

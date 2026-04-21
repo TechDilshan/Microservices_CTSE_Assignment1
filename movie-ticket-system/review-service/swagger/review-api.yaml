@@ -1,0 +1,142 @@
+openapi: 3.0.0
+info:
+  title: Review Service API
+  version: 1.0.0
+  description: Movie reviews and ratings service
+
+servers:
+  - url: http://localhost:3010
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+
+  /api/reviews:
+
+    post:
+      summary: Create review
+      description: Create a new review for a movie
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - movieId
+                - rating
+              properties:
+                movieId:
+                  type: string
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                comment:
+                  type: string
+      responses:
+        201:
+          description: Review created
+        400:
+          description: Bad Request
+
+  /api/reviews/movie/{movieId}:
+
+    get:
+      summary: Get reviews for movie
+      description: Returns a list of reviews for a specific movie
+      parameters:
+        - in: path
+          name: movieId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of reviews
+
+  /api/reviews/movie/{movieId}/summary:
+
+    get:
+      summary: Get review summary for movie
+      description: Returns average rating and total review count for a specific movie
+      parameters:
+        - in: path
+          name: movieId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Movie review summary
+
+  /api/reviews/summary/all:
+
+    get:
+      summary: Get all movie summaries
+      description: Returns summaries for all reviewed movies (used by Analytics)
+      responses:
+        200:
+          description: List of movie summaries
+
+  /api/reviews/{id}:
+
+    put:
+      summary: Update review
+      description: Update your own review
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                comment:
+                  type: string
+      responses:
+        200:
+          description: Review updated
+        400:
+          description: Bad request
+        403:
+          description: Forbidden
+        404:
+          description: Not found
+
+    delete:
+      summary: Delete review
+      description: Delete your own review
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Review deleted
+        403:
+          description: Forbidden
+        404:
+          description: Not found

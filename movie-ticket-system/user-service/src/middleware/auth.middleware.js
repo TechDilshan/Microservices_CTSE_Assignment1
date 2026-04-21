@@ -12,7 +12,7 @@ module.exports = (req, res, next) => {
 
         const token = authHeader.split(" ")[1]
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretkey_movie_ticket_system')
 
         req.user = decoded
 

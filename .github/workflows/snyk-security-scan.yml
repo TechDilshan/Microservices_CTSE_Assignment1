@@ -12,7 +12,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [ "api-gateway", "user-service", "hall-service", "booking-service" ]
+        service: 
+          - "api-gateway"
+          - "user-service"
+          - "hall-service"
+          - "booking-service"
+          - "analytics-service"
+          - "discount-service"
+          - "movie-service"
+          - "review-service"
+          - "payment-service"
     defaults:
       run:
         working-directory: movie-ticket-system/${{ matrix.service }}
@@ -35,25 +44,3 @@ jobs:
         with:
           args: --severity-threshold=medium
 
-  snyk-java:
-    name: Snyk scan - Java payment-service
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: movie-ticket-system/payment-service
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Run Snyk
-        uses: snyk/actions/maven@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=medium

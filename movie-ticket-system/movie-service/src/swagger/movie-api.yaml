@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Movie Service API
-  description: Movie and Showtime management service for Movie Ticket Reservation System
+  description: Movie management service for Movie Ticket Reservation System
   version: 1.0.0
 
 servers:
@@ -58,40 +58,6 @@ components:
           type: string
           example: 2019-04-26
 
-    Show:
-      type: object
-      properties:
-        id:
-          type: string
-        movie_id:
-          type: string
-        theatre:
-          type: string
-        time:
-          type: string
-        available_seats:
-          type: integer
-
-    ShowCreate:
-      type: object
-      required:
-        - movie_id
-        - theatre
-        - time
-        - available_seats
-      properties:
-        movie_id:
-          type: string
-        theatre:
-          type: string
-          example: Cinema City Hall 1
-        time:
-          type: string
-          example: "18:30"
-        available_seats:
-          type: integer
-          example: 120
-
 paths:
 
   /api/movies:
@@ -116,6 +82,13 @@ paths:
       summary: Get all movies
       tags:
         - Movies
+      parameters:
+        - in: query
+          name: hallId
+          schema:
+            type: string
+          required: false
+          description: Filter movies by hallId
       responses:
         200:
           description: List of movies
@@ -175,84 +148,3 @@ paths:
       responses:
         200:
           description: Movie deleted
-
-
-  /api/shows:
-
-    post:
-      summary: Create showtime
-      tags:
-        - Shows
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ShowCreate'
-      responses:
-        200:
-          description: Show created
-
-    get:
-      summary: Get all shows
-      tags:
-        - Shows
-      responses:
-        200:
-          description: List of shows
-
-
-  /api/shows/{id}:
-
-    get:
-      summary: Get show by ID
-      tags:
-        - Shows
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Show returned
-
-    put:
-      summary: Update show
-      tags:
-        - Shows
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ShowCreate'
-      responses:
-        200:
-          description: Show updated
-
-    delete:
-      summary: Delete show
-      tags:
-        - Shows
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Show deleted

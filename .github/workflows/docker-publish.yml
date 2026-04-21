@@ -7,6 +7,18 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: 
+          - "api-gateway"
+          - "user-service"
+          - "hall-service"
+          - "booking-service"
+          - "review-service"
+          - "discount-service"
+          - "analytics-service"
+          - "movie-service"
+          - "payment-service"
     env:
       REGISTRY: docker.io
       DOCKERHUB_NAMESPACE: ${{ secrets.DOCKERHUB_NAMESPACE }}
@@ -24,15 +36,6 @@ jobs:
       - name: Build and push images
         uses: docker/build-push-action@v6
         with:
-          context: ./movie-ticket-system
+          context: ./movie-ticket-system/${{ matrix.service }}
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_NAMESPACE }}/api-gateway:latest
-            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_NAMESPACE }}/user-service:latest
-            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_NAMESPACE }}/hall-service:latest
-            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_NAMESPACE }}/booking-service:latest
-            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_NAMESPACE }}/movie-service:latest
-            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_NAMESPACE }}/payment-service:latest
-            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_NAMESPACE }}/review-service:latest
-            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_NAMESPACE }}/discount-service:latest
-            ${{ env.REGISTRY }}/${{ env.DOCKERHUB_NAMESPACE }}/analytics-service:latest
+          tags: ${{ env.REGISTRY }}/${{ env.DOCKERHUB_NAMESPACE }}/${{ matrix.service }}:latest

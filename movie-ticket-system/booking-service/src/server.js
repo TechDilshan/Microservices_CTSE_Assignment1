@@ -1,5 +1,6 @@
 const express = require("express")
 const dotenv = require("dotenv")
+dotenv.config()
 const cors = require("cors")
 
 const swaggerUi = require("swagger-ui-express")
@@ -8,14 +9,16 @@ const YAML = require("yamljs")
 const connectDB = require("./config/db")
 const bookingRoutes = require("./routes/booking.routes")
 
-dotenv.config()
-
 const app = express()
 
 connectDB()
 
 app.use(cors())
 app.use(express.json())
+
+app.get("/api/health", (req, res) => {
+    res.json({ status: "OK Booking" });
+});
 
 const swaggerDocument = YAML.load("./swagger/booking-api.yaml")
 

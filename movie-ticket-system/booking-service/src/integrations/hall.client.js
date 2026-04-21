@@ -1,6 +1,6 @@
 const axios = require("axios")
 
-const HALL_SERVICE_URL = process.env.HALL_SERVICE_URL || "http://localhost:3005"
+const HALL_SERVICE_URL = "http://hall-service-alb-685815397.ap-south-1.elb.amazonaws.com"
 
 exports.getSeatBlock = async (hallId) => {
     const response = await axios.get(`${HALL_SERVICE_URL}/api/halls/${hallId}/seat-block`)
