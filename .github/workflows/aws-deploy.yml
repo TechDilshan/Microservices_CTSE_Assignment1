@@ -60,9 +60,19 @@ jobs:
       - name: Update ECS Service
         run: |
           # 3. Automatically update docker container inside AWS ECS
-          # This command forces the dynamically named ECS cluster to redeploy pulling the new "latest" image from ECR
+          CLUSTER_NAME="${{ matrix.service }}-cluster"
+          
+          # Fetch the unique service name (your random hash name) inside the cluster automatically
+          SERVICE_ARN=$(aws ecs list-services --cluster $CLUSTER_NAME --region ${{ env.AWS_REGION }} --query "serviceArns[0]" --output text)
+          
+          if [ "$SERVICE_ARN" == "None" ] || [ -z "$SERVICE_ARN" ]; then
+            echo "No service found in cluster $CLUSTER_NAME to update!"
+            exit 1
+          fi
+          
+          # Force the deployment on that specific dynamically found service
           aws ecs update-service \
-            --cluster ${{ matrix.service }}-cluster \
-            --service ${{ matrix.service }} \
+            --cluster $CLUSTER_NAME \
+            --service $SERVICE_ARN \
             --force-new-deployment \
             --region ${{ env.AWS_REGION }}
