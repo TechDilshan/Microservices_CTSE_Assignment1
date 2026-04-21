@@ -6,7 +6,6 @@ on:
 
 env:
   AWS_REGION: ap-south-1
-  ECS_CLUSTER: "microservices-cluster" # UPDATE THIS: Replace with your actual ECS Cluster name in AWS
 
 jobs:
   deploy:
@@ -60,9 +59,9 @@ jobs:
       - name: Update ECS Service
         run: |
           # 3. Automatically update docker container inside AWS ECS
-          # This command forces the ECS service to redeploy pulling the new "latest" image from ECR
+          # This command forces the dynamically named ECS cluster to redeploy pulling the new "latest" image from ECR
           aws ecs update-service \
-            --cluster ${{ env.ECS_CLUSTER }} \
+            --cluster ${{ matrix.service }}-cluster \
             --service ${{ matrix.service }} \
             --force-new-deployment \
             --region ${{ env.AWS_REGION }}
